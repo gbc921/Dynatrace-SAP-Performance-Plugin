@@ -58,6 +58,9 @@ public class SAPMonitor implements Monitor {
 		// begin context to use ABAP calls
 		JCoContext.begin(jcoDestination);
 		
+		if (sapCall.Login(jcoDestination) == null)
+			return new Status(Status.StatusCode.ErrorInternal);
+		
 		log.finer("SETUP-END");
 		return new Status(Status.StatusCode.Success);
 	}
