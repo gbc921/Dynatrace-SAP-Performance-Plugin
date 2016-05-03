@@ -12,36 +12,28 @@ public class SAPCalls {
 	
 	private static final Logger log = Logger.getLogger(Config.class.getName());
 	
-	private static JCoDestination destination;
-	
-	public JCoDestination connect(Config conf) {
+	public JCoDestination connect(Config conf, JCoDestination jcoDestination) {
 		MyDestinationDataProvider provider = 
 				new MyDestinationDataProvider(setProperties(conf));
 		
 		try {
 			com.sap.conn.jco.ext.Environment.registerDestinationDataProvider(provider);
-			destination = JCoDestinationManager.getDestination(conf.getSysname());
-			destination.ping();
-			log.info("Connection Success! :)");
+			jcoDestination = JCoDestinationManager.getDestination(conf.getSysname());
+			jcoDestination.ping();
+			log.fine("Connection Success! :)");
+			return jcoDestination;
 			
 		} catch (JCoException e) {
 			// TODO Auto-generated catch block
 			log.severe(e.toString());
 			log.severe("Connection Error!");
 		}
-		
-		
+
 		return null;
 	}
 	
 	private Properties setProperties(Config conf) {
 		Properties connectProperties = new Properties();
-		
-		log.warning(conf.getAsname());
-		log.warning(conf.getSysnum());
-		log.warning(conf.getClinum());
-		log.warning(conf.getUsername());
-		log.warning(conf.getPassword());
 		
 		connectProperties.setProperty(DestinationDataProvider.JCO_ASHOST,	conf.getAsname());
 		connectProperties.setProperty(DestinationDataProvider.JCO_SYSNR,	conf.getSysnum());

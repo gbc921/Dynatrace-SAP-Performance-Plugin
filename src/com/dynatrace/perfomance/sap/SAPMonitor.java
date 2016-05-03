@@ -7,6 +7,8 @@ package com.dynatrace.perfomance.sap;
   **/ 
 
 import com.dynatrace.diagnostics.pdk.*;
+import com.sap.conn.jco.JCoContext;
+import com.sap.conn.jco.JCoDestination;
 
 import java.util.logging.Logger;
 
@@ -17,6 +19,7 @@ public class SAPMonitor implements Monitor {
 	
 	private Config config;
 	private SAPCalls sapCall = new SAPCalls();
+	private static JCoDestination jcoDestination;
 	
 	/**
 	 * Initializes the Plugin. This method is called in the following cases:
@@ -42,15 +45,20 @@ public class SAPMonitor implements Monitor {
 	 */
 	@Override
 	public Status setup(MonitorEnvironment env) throws Exception {
-		log.info("SETUP-BEGIN");
+		log.finer("SETUP-BEGIN");
 
 		// get config info from plugin setup
 		config = new Config(env);
 		
-		sapCall.connect(config);
+		jcoDestination = sapCall.connect(config, jcoDestination);
 		
-		log.info("SETUP-END");
+		if (jcoDestination == null)
+			return new Status(Status.StatusCode.ErrorInfrastructure);
 		
+		// begin context to use ABAP calls
+		JCoContext.begin(jcoDestination);
+		
+		log.finer("SETUP-END");
 		return new Status(Status.StatusCode.Success);
 	}
 
@@ -121,6 +129,6 @@ public class SAPMonitor implements Monitor {
 	 * @see Monitor#setup(MonitorEnvironment)
 	 */	@Override
 	public void teardown(MonitorEnvironment env) throws Exception {
-		// TODO
+		 JCoContext.end(jcoDestination);
 	}
 }
