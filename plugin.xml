@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<!-- plugin.xml file written by dynaTrace Client 6.2.0 -->
+<plugin>
+  <extension point="com.dynatrace.diagnostics.pdk.pluginconfig" id="com.dynatrace.performance.sap" name="SAP Perfomance Monitor">
+    <information>
+      <category value="" />
+      <displayname value="%PLUGIN_CONFIG_NAME" />
+      <description value="Monitor SAP system performance" />
+      <supportlevel value="unsupported" />
+    </information>
+    <configuration>
+      <property key="asname" label="Application Server Name" type="string" description="Type SAP Applications Server Name" default="" multiline="false" />
+      <property key="sysnum" label="System Number" type="long" description="Type SAP System Number" default="0" />
+      <property key="clinum" label="Client Number" type="long" description="Type SAP Client Number" default="0" />
+      <property key="username" label="User Name" type="string" description="SAP User Name" default="" multiline="false" />
+      <property key="password" label="Password" type="password" description="SAP Password" default="" />
+      <property key="sysname" label="System Name" type="string" description="Please input System Name (ID)&#xA;Usually 3 letters" default="ABC" multiline="false" />
+    </configuration>
+  </extension>
+  <extension point="com.dynatrace.diagnostics.pdk.monitor" id="com.dynatrace.performance.sap.monitor" name="SAP Monitor">
+    <plugin configid="com.dynatrace.performance.sap" class="com.dynatrace.perfomance.sap.SAPMonitor" />
+  </extension>
+  <extension point="com.dynatrace.diagnostics.pdk.monitormetricgroup" id="com.dynatrace.performance.sap.metricgroup1" name="Dialog Overview">
+    <metricgroup monitorid="com.dynatrace.performance.sap.monitor">
+      <metric defaultrate="purepath" name="Dialog Response Time" unit="ms" description="Dialog Response Time" />
+    </metricgroup>
+  </extension>
+</plugin>

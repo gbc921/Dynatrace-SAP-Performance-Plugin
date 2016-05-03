@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Require-Bundle: com.dynatrace.diagnostics.sdk
+Export-Package: jcifs
+Bundle-Vendor: DXS Brazil
+Bundle-ClassPath: .,lib/jcifs-1.3.17.jar,lib/sapjco3.jar
+Bundle-Version: 0.0.1
+Bundle-Name: SAP Perfomance Monitor
+Bundle-ManifestVersion: 2
+Bundle-NativeCode: /res/sapjco3.dll; osname=win32
+Bundle-SymbolicName: com.dynatrace.performance.sap;singleton:=true
+
