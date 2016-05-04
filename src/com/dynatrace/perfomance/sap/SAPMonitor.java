@@ -10,6 +10,7 @@ import com.dynatrace.diagnostics.pdk.*;
 import com.sap.conn.jco.JCoContext;
 import com.sap.conn.jco.JCoDestination;
 
+import java.util.Collection;
 import java.util.logging.Logger;
 
 
@@ -132,6 +133,10 @@ public class SAPMonitor implements Monitor {
 	 * @see Monitor#setup(MonitorEnvironment)
 	 */	@Override
 	public void teardown(MonitorEnvironment env) throws Exception {
+		 log.finer("TEARDOWN-BEGIN");
+		 if (sapCall.Logoff(jcoDestination) == null)
+				log.warning("Logoff Error");
 		 JCoContext.end(jcoDestination);
+		 log.finer("TEARDOWN-END");
 	}
 }

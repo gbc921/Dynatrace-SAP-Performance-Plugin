@@ -35,6 +35,23 @@ public class SAPCalls {
 
 		return jcoDestination;
 	}
+	
+	public JCoDestination Logoff(JCoDestination jcoDestination) {
+		String function = "BAPI_XMI_LOGOFF";
+		JCoFunction jcoFunction = setFunction(jcoDestination, function);
+		
+		if (jcoFunction == null)
+			return null;
+		
+		jcoFunction = executeFunction(jcoDestination, jcoFunction);
+		
+		if (jcoFunction == null)
+			return null;
+		
+		log.finer(function + "\n\n" + getReturnStructure(jcoFunction, ""));
+		
+		return jcoDestination;
+	}
 
 	public JCoDestination connect(Config conf, JCoDestination jcoDestination) {
 		MyDestinationDataProvider provider = 
