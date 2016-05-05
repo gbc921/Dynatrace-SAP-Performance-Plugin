@@ -3,10 +3,12 @@ package com.dynatrace.perfomance.sap;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import com.sap.conn.jco.JCo;
 import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.JCoDestinationManager;
 import com.sap.conn.jco.JCoException;
 import com.sap.conn.jco.JCoFunction;
+import com.sap.conn.jco.JCoParameterList;
 import com.sap.conn.jco.JCoStructure;
 import com.sap.conn.jco.ext.DestinationDataProvider;
 
@@ -22,10 +24,9 @@ public class SAPCalls {
 		jcoFunction = setImportValueLogin(jcoFunction);
 		
 		jcoFunction.execute(jcoDestination);
-		
-		log.fine(function + " SESSION-ID: " +
-					jcoFunction.getExportParameterList().getValue("SESSIONID"));
-		log.finer(function + "\n\n" + getReturnStructure(jcoFunction, ""));
+
+		log.fine(function + " SESSION-ID: " + getReturn(jcoFunction, "SESSIONID"));
+		log.finer(function + "\n\n" + getReturn(jcoFunction, ""));
 	}
 	
 	public void Logoff(JCoDestination jcoDestination) throws JCoException {
@@ -33,8 +34,8 @@ public class SAPCalls {
 		JCoFunction jcoFunction = setFunction(jcoDestination, function);
 		
 		jcoFunction.execute(jcoDestination);
-		
-		log.finer(function + "\n\n" + getReturnStructure(jcoFunction, ""));
+
+		log.finer(function + "\n\n" + getReturn(jcoFunction, ""));
 	}
 
 	public JCoDestination connect(Config conf, JCoDestination jcoDestination) throws JCoException {
@@ -87,14 +88,28 @@ public class SAPCalls {
 		
 		return jcoFunction;
 	}
-	
-	private JCoStructure getReturnStructure (JCoFunction jcoFunction,
-											String structureName) {
+
+	private String getReturn(JCoFunction jcoFunction, String structureName) {
+
+		JCoParameterList paramList = jcoFunction.getExportParameterList();
+		String structure = "";
+		String value = "";
+
 		// default value for structureName is RETURN
 		if (structureName.isEmpty())
 			structureName = "RETURN";
-		
-		return jcoFunction.getExportParameterList().getStructure(structureName);
+
+		if ("SESSIONID".equals(structureName)) {
+			// Some functions return a Value instead of a Structure
+			// e.g.: BAPI_XMI_LOGON
+			value = paramList.getValue(structureName).toString();
+			return value;
+
+		} else {
+			// Returns a structure
+			structure = paramList.getStructure(structureName).toString();
+			return structure;
+		}
 	}
 	
 }
