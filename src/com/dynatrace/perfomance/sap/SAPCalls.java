@@ -15,42 +15,26 @@ public class SAPCalls {
 	private static final Logger log = Logger.getLogger(Config.class.getName());
 	
 
-	public JCoDestination Login(JCoDestination jcoDestination) {
+	public void Login(JCoDestination jcoDestination) {
 		String function = "BAPI_XMI_LOGON";
 		JCoFunction jcoFunction = setFunction(jcoDestination, function);
-		
-		if (jcoFunction == null)
-			return null;
 		
 		jcoFunction = setImportValueLogin(jcoFunction);
 		
 		jcoFunction = executeFunction(jcoDestination, jcoFunction);
 		
-		if (jcoFunction == null)
-			return null;
-		
-		log.fine(function + " SESSION-ID: " +
+		log.info(function + " SESSION-ID: " +
 					jcoFunction.getExportParameterList().getValue("SESSIONID"));
 		log.finer(function + "\n\n" + getReturnStructure(jcoFunction, ""));
-
-		return jcoDestination;
 	}
 	
-	public JCoDestination Logoff(JCoDestination jcoDestination) {
+	public void Logoff(JCoDestination jcoDestination) {
 		String function = "BAPI_XMI_LOGOFF";
 		JCoFunction jcoFunction = setFunction(jcoDestination, function);
 		
-		if (jcoFunction == null)
-			return null;
-		
 		jcoFunction = executeFunction(jcoDestination, jcoFunction);
 		
-		if (jcoFunction == null)
-			return null;
-		
 		log.finer(function + "\n\n" + getReturnStructure(jcoFunction, ""));
-		
-		return jcoDestination;
 	}
 
 	public JCoDestination connect(Config conf, JCoDestination jcoDestination) {
