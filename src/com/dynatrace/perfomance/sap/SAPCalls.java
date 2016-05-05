@@ -1,6 +1,8 @@
 package com.dynatrace.perfomance.sap;
 
-import java.util.Hashtable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -19,23 +21,31 @@ public class SAPCalls {
 
 	public void Login(JCoDestination jcoDestination) throws JCoException {
 		String function = "BAPI_XMI_LOGON";
-		JCoFunction jcoFunction = setFunction(jcoDestination, function);
+		ArrayList<String> exportList = new ArrayList<>();
+		Map<String, String> importList = new HashMap<>();
+		Map<String, String> returnTable = new HashMap<>();
+		
+		importList.put("EXTCOMPANY", "Dynatrace");
+		importList.put("INTERFACE", "XAL");
+		importList.put("VERSION", "1.0");
+		
+		exportList.add("SESSIONID");
+				
+		returnTable = callBAPI(jcoDestination, function, importList, exportList);
 
-		jcoFunction = setImportValueLogin(jcoFunction);
-
-		jcoFunction.execute(jcoDestination);
-
-		log.fine(function + " SESSION-ID: " + getReturn(jcoFunction, "SESSIONID"));
-		log.finer(function + "\n\n" + getReturn(jcoFunction, ""));
+		log.fine(function + " SESSION-ID: " + returnTable.get("SESSIONID"));
+		log.finer(function + "\n\n" + returnTable.get("RETURN"));
 	}
 
 	public void Logoff(JCoDestination jcoDestination) throws JCoException {
 		String function = "BAPI_XMI_LOGOFF";
-		JCoFunction jcoFunction = setFunction(jcoDestination, function);
+		ArrayList<String> exportList = new ArrayList<>();
+		Map<String, String> importList = new HashMap<>();
+		Map<String, String> returnTable = new HashMap<>();
+		
+		returnTable = callBAPI(jcoDestination, function, importList, exportList);
 
-		jcoFunction.execute(jcoDestination);
-
-		log.finer(function + "\n\n" + getReturn(jcoFunction, ""));
+		log.finer(function + "\n\n" + returnTable.get("RETURN"));
 	}
 
 	public JCoDestination connect(Config conf, JCoDestination jcoDestination) throws JCoException {
@@ -50,7 +60,35 @@ public class SAPCalls {
 		return jcoDestination;
 	}
 
-	
+	private Map<String, String> callBAPI(JCoDestination jcoDestination,
+											String functionName,
+											Map<String, String> importList,
+											ArrayList<String> exportList)
+			throws JCoException {
+
+		Map<String, String> returnTable = new HashMap<>();
+
+		JCoFunction jcoFunction = setFunction(jcoDestination, functionName);
+
+		// set import values
+		for (Map.Entry<String, String> entry : importList.entrySet()) {
+			jcoFunction = setImportValue(jcoFunction, entry.getKey(), entry.getValue());
+		}
+		
+		jcoFunction.execute(jcoDestination);
+		
+		// always return export parameter name RETURN
+		returnTable.put("RETURN", getReturn(jcoFunction, ""));
+		
+		// iterate through other export parameters types
+		for (String exportName : exportList) {
+			returnTable.put(exportName, getReturn(jcoFunction, exportName));
+		}
+
+		return returnTable;
+
+	}
+
 	private Properties setProperties(Config conf) {
 		Properties connectProperties = new Properties();
 
@@ -69,7 +107,6 @@ public class SAPCalls {
 		return jcoDestination.getRepository().getFunction(functionName);
 	}
 
-	// generic setImport Value
 	private JCoFunction setImportValue(JCoFunction jcoFunction, String param, String value) {
 
 		jcoFunction.getImportParameterList().setValue(param, value);
@@ -77,36 +114,28 @@ public class SAPCalls {
 		return jcoFunction;
 	}
 
-	private JCoFunction setImportValueLogin(JCoFunction jcoFunction) {
-
-		jcoFunction.getImportParameterList().setValue("EXTCOMPANY", "Dynatrace");
-		jcoFunction.getImportParameterList().setValue("INTERFACE", "XAL");
-		jcoFunction.getImportParameterList().setValue("VERSION", "1.0");
-
-		return jcoFunction;
-	}
-
-	private String getReturn(JCoFunction jcoFunction, String structureName) {
+	private String getReturn(JCoFunction jcoFunction, String parameterName) {
 
 		JCoParameterList paramList = jcoFunction.getExportParameterList();
 		String structure = "";
 		String value = "";
 
 		// default value for structureName is RETURN
-		if (structureName.isEmpty())
-			structureName = "RETURN";
+		if (parameterName.isEmpty())
+			parameterName = "RETURN";
 
-		if ("SESSIONID".equals(structureName)) {
+		if ("SESSIONID".equals(parameterName)) {
 			// Some functions return a Value instead of a Structure
 			// e.g.: BAPI_XMI_LOGON
-			value = paramList.getValue(structureName).toString();
+			value = paramList.getValue(parameterName).toString();
 			return value;
 
 		} else {
 			// Returns a structure
-			structure = paramList.getStructure(structureName).toString();
-			return structure;
+			structure = paramList.getStructure(parameterName).toString();
+			return structure; //TODO: Parse the type field in case of error
 		}
 	}
 
 }
+	
