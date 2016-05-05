@@ -15,47 +15,41 @@ public class SAPCalls {
 	private static final Logger log = Logger.getLogger(Config.class.getName());
 	
 
-	public void Login(JCoDestination jcoDestination) {
+	public void Login(JCoDestination jcoDestination) throws JCoException {
 		String function = "BAPI_XMI_LOGON";
 		JCoFunction jcoFunction = setFunction(jcoDestination, function);
 		
 		jcoFunction = setImportValueLogin(jcoFunction);
 		
-		jcoFunction = executeFunction(jcoDestination, jcoFunction);
+		jcoFunction.execute(jcoDestination);
 		
-		log.info(function + " SESSION-ID: " +
+		log.fine(function + " SESSION-ID: " +
 					jcoFunction.getExportParameterList().getValue("SESSIONID"));
 		log.finer(function + "\n\n" + getReturnStructure(jcoFunction, ""));
 	}
 	
-	public void Logoff(JCoDestination jcoDestination) {
+	public void Logoff(JCoDestination jcoDestination) throws JCoException {
 		String function = "BAPI_XMI_LOGOFF";
 		JCoFunction jcoFunction = setFunction(jcoDestination, function);
 		
-		jcoFunction = executeFunction(jcoDestination, jcoFunction);
+		jcoFunction.execute(jcoDestination);
 		
 		log.finer(function + "\n\n" + getReturnStructure(jcoFunction, ""));
 	}
 
-	public JCoDestination connect(Config conf, JCoDestination jcoDestination) {
+	public JCoDestination connect(Config conf, JCoDestination jcoDestination) throws JCoException {
 		MyDestinationDataProvider provider = 
 				new MyDestinationDataProvider(setProperties(conf));
-		
-		try {
-			com.sap.conn.jco.ext.Environment.registerDestinationDataProvider(provider);
-			jcoDestination = JCoDestinationManager.getDestination(conf.getSysname());
-			jcoDestination.ping();
-			log.fine("Connection Success! :)");
-			return jcoDestination;
-			
-		} catch (JCoException e) {
-			// TODO Auto-generated catch block
-			log.severe(e.toString());
-			log.severe("Connection Error!");
-		}
 
-		return null;
+		com.sap.conn.jco.ext.Environment.registerDestinationDataProvider(provider);
+		jcoDestination = JCoDestinationManager.getDestination(conf.getSysname());
+		jcoDestination.ping();
+		
+		log.fine("Connection Success! :)");
+		
+		return jcoDestination;
 	}
+
 	
 	private Properties setProperties(Config conf) {
 		Properties connectProperties = new Properties();
@@ -70,19 +64,10 @@ public class SAPCalls {
 		return connectProperties;
 	}
 
-	
-
 	private JCoFunction setFunction(JCoDestination jcoDestination,
-			String functionName) {
+			String functionName) throws JCoException {
 		
-		try {
-			return jcoDestination.getRepository().getFunction(functionName);	
-		} catch (JCoException e) {
-			log.severe(e.toString());
-			log.severe("Function Name Error!");
-		}
-		
-		return null;
+		return jcoDestination.getRepository().getFunction(functionName);
 	}
 
 	// generic setImport Value
@@ -101,26 +86,6 @@ public class SAPCalls {
 		jcoFunction.getImportParameterList().setValue("VERSION", "1.0");
 		
 		return jcoFunction;
-	}
-
-	private JCoFunction executeFunction(JCoDestination jcoDestination,
-										JCoFunction jcoFunction) {
-		if (jcoFunction == null) {
-			log.severe("Function Error!");
-			// should we use this instead of passing null on errors?
-			throw new RuntimeException("Function not found");
-		}
-		
-		try {
-			jcoFunction.execute(jcoDestination);
-			return jcoFunction;
-		}
-		catch (Exception e) {
-			log.severe(e.getMessage().toString());
-			log.severe("Function Execution Error!");
-		}
-		
-		return null;
 	}
 	
 	private JCoStructure getReturnStructure (JCoFunction jcoFunction,

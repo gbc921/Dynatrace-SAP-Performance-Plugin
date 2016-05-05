@@ -9,6 +9,7 @@ package com.dynatrace.perfomance.sap;
 import com.dynatrace.diagnostics.pdk.*;
 import com.sap.conn.jco.JCoContext;
 import com.sap.conn.jco.JCoDestination;
+import com.sap.conn.jco.JCoException;
 
 import java.util.Collection;
 import java.util.logging.Logger;
@@ -51,15 +52,24 @@ public class SAPMonitor implements Monitor {
 		// get config info from plugin setup
 		config = new Config(env);
 		
-		jcoDestination = sapCall.connect(config, jcoDestination);
-		
-		if (jcoDestination == null)
+		try {
+			jcoDestination = sapCall.connect(config, jcoDestination);
+		} catch (JCoException e) {
+			log.severe(e.toString());
+			log.severe("Connection Error!");
 			return new Status(Status.StatusCode.ErrorInfrastructure);
-		
+		}
+
 		// begin context to use ABAP calls
 		JCoContext.begin(jcoDestination);
 		
-		sapCall.Login(jcoDestination);
+		try {
+			sapCall.Login(jcoDestination);
+		} catch (JCoException e) {
+			log.severe(e.toString());
+			log.severe("BAPI Login Error!");
+			return new Status(Status.StatusCode.ErrorInternal);
+		}
 		
 		log.finer("SETUP-END");
 		return new Status(Status.StatusCode.Success);
@@ -133,9 +143,16 @@ public class SAPMonitor implements Monitor {
 	 */	@Override
 	public void teardown(MonitorEnvironment env) throws Exception {
 		 log.finer("TEARDOWN-BEGIN");
-		 if (sapCall.Logoff(jcoDestination) == null)
-				log.warning("Logoff Error");
+
+		 try {
+			sapCall.Logoff(jcoDestination);	 
+		 } catch (JCoException e) {
+			log.severe(e.toString());
+			log.severe("BAPI Logoff Error!");
+		 }
+
 		 JCoContext.end(jcoDestination);
+		 
 		 log.finer("TEARDOWN-END");
 	}
 }
